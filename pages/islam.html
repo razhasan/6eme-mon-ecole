@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Éducation Islamique — Le Cahier de Lina</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="pin">☪</div>
+      <span class="title">Le Cahier de Lina</span>
+    </div>
+    <div class="date-stamp" id="date-stamp"></div>
+  </div>
+
+  <div class="tabs">
+    <a href="../index.html">🏠 Accueil</a>
+    <a href="islam.html" class="active">☪ Éducation Islamique</a>
+    <a href="maths.html">📐 Maths</a>
+    <a href="francais.html">📖 Français</a>
+    <a href="histoire-geo.html">🗺️ Histoire-Géo</a>
+    <a href="sciences.html">🔬 Sciences</a>
+    <a href="anglais.html">🇬🇧 Anglais</a>
+  </div>
+
+  <h1>☪ Éducation Islamique</h1>
+  <p>Un peu chaque jour, pour apprendre les bases avec sérénité — à ton rythme, une leçon par jour.</p>
+
+  <div class="day-track" id="day-track"></div>
+
+  <div id="lesson-content" class="hidden"></div>
+  <div id="quiz-content" class="hidden"></div>
+  <div id="waiting-content" class="hidden"></div>
+
+  <footer>Fait avec ❤️ pour Lina</footer>
+</div>
+
+<script src="../js/lessons-engine.js"></script>
+<script src="../js/islam-data.js"></script>
+<script>
+  document.getElementById('date-stamp').textContent = dateFR(today0());
+  initSubjectPage('islam', 'Éducation Islamique', LESSONS_ISLAM);
+</script>
+</body>
+</html>
