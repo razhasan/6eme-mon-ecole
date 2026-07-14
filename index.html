@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Cahier d'Aiyzah — Accueil</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="pin">📚</div>
+      <span class="title">Le Cahier d'Aiyzah</span>
+    </div>
+    <div class="date-stamp" id="date-stamp"></div>
+  </div>
+
+  <div class="hero">
+    <h1>Bienvenue dans ton cahier, Aiyzah !</h1>
+    <p>
+      Ici, tu vas apprendre un petit peu chaque jour dans plusieurs matières : l'Éducation Islamique,
+      les Maths, le Français, l'Histoire-Géographie, les Sciences et l'Anglais — comme au collège, en 6ème.
+      Une nouvelle leçon se débloque chaque jour. Lis-la tranquillement, puis fais le petit quiz à la fin
+      pour vérifier que tu as bien compris. Bon travail, on est fiers de toi ! 🌿
+    </p>
+    <div class="doodle">📖</div>
+  </div>
+
+  <section class="dashboard">
+    <h2>📊 Mon Progrès</h2>
+    <div class="dashboard-top">
+      <div class="chart-container">
+        <canvas id="progressChart" width="150" height="150"></canvas>
+        <div class="chart-label">Progrès global : <span id="globalProgress">0%</span></div>
+      </div>
+      <div class="stat-cards">
+        <div class="stat-card">
+          <span class="emoji">📚</span>
+          <span>Leçons complétées : <strong id="totalDone">0</strong>/<span id="totalAll">0</span></span>
+        </div>
+        <div class="stat-card">
+          <span class="emoji">🏆</span>
+          <span>Quiz réussis : <strong id="passedQuizzes">0</strong></span>
+        </div>
+        <div class="stat-card">
+          <span class="emoji">🔥</span>
+          <span>Matières commencées : <strong id="startedSubjects">0</strong>/6</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <h2>Tes matières</h2>
+  <div class="grid" id="subject-grid"></div>
+
+  <footer>Fait avec ❤️ pour Aiyzah — une leçon par jour, un pas de plus à chaque fois.</footer>
+</div>
+
+<script src="js/lessons-engine.js"></script>
+<script src="js/islam-data.js"></script>
+<script src="js/maths-data.js"></script>
+<script src="js/francais-data.js"></script>
+<script src="js/histoire-geo-data.js"></script>
+<script src="js/sciences-data.js"></script>
+<script src="js/anglais-data.js"></script>
+<script>
+  document.getElementById('date-stamp').textContent = dateFR(today0());
+
+  const SUBJECTS = [
+    { key:'islam', emoji:'☪', name:'Éducation Islamique', desc:"Découvrir les bases de l'Islam, pas à pas.", lessons: LESSONS_ISLAM, page:'pages/islam.html' },
+    { key:'maths', emoji:'📐', name:'Mathématiques', desc:"Nombres, calculs et géométrie.", lessons: LESSONS_MATHS, page:'pages/maths.html' },
+    { key:'francais', emoji:'📖', name:'Français', desc:"Grammaire, conjugaison et histoires.", lessons: LESSONS_FRANCAIS, page:'pages/francais.html' },
+    { key:'histoire-geo', emoji:'🗺️', name:'Histoire-Géographie', desc:"Se repérer dans le temps et l'espace.", lessons: LESSONS_HISTOIRE_GEO, page:'pages/histoire-geo.html' },
+    { key:'sciences', emoji:'🔬', name:'Sciences (SVT)', desc:"Le vivant, le corps humain, la nature.", lessons: LESSONS_SCIENCES, page:'pages/sciences.html' },
+    { key:'anglais', emoji:'🇬🇧', name:'Anglais', desc:"Vocabulaire et phrases utiles au quotidien.", lessons: LESSONS_ANGLAIS, page:'pages/anglais.html' },
+  ];
+
+  const grid = document.getElementById('subject-grid');
+  let grandDone = 0, grandTotal = 0, startedCount = 0;
+
+  SUBJECTS.forEach(s=>{
+    const {done, total} = getProgressSummary(s.key, s.lessons.length);
+    grandDone += done; grandTotal += total;
+    if(done > 0) startedCount++;
+
+    const pct = total ? Math.round((done/total)*100) : 0;
+    const label = done === 0 ? "Commencer" : (done >= total ? "Revoir" : "Continuer");
+    const status = done === 0 ? "🔒 Non commencé" : (done >= total ? "✅ Terminé" : "📖 En cours");
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="emoji">${s.emoji}</div>
+      <h3>${s.name}</h3>
+      <p>${s.desc}</p>
+      <div class="gauge"><div class="gauge-fill" style="width:${pct}%"></div></div>
+      <span class="percentage">${pct}% · ${done}/${total} leçons</span>
+      <span class="status">${status}</span>
+      <button class="btn" onclick="location.href='${s.page}'">${label} →</button>
+    `;
+    grid.appendChild(card);
+  });
+
+  // ---- stat cards ----
+  document.getElementById('totalDone').textContent = grandDone;
+  document.getElementById('totalAll').textContent = grandTotal;
+  document.getElementById('passedQuizzes').textContent = grandDone; // 1 quiz réussi = 1 leçon complétée
+  document.getElementById('startedSubjects').textContent = startedCount;
+
+  // ---- donut chart (progrès global, dessiné en Canvas, sans librairie externe) ----
+  const globalPct = grandTotal ? Math.round((grandDone/grandTotal)*100) : 0;
+  document.getElementById('globalProgress').textContent = globalPct + '%';
+
+  const canvas = document.getElementById('progressChart');
+  const ctx = canvas.getContext('2d');
+  const cx = canvas.width/2, cy = canvas.height/2, radius = 60, lineWidth = 18;
+
+  function drawDonut(pct){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // fond du donut
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI*2);
+    ctx.strokeStyle = '#eee6d5';
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+
+    // arc de progrès
+    const start = -Math.PI/2;
+    const end = start + (Math.PI*2 * (pct/100));
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, start, end);
+    const gradient = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+    gradient.addColorStop(0, '#6FA8C7');
+    gradient.addColorStop(1, '#3F6D4E');
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // texte au centre
+    ctx.fillStyle = '#2B3A4A';
+    ctx.font = "700 1.6rem 'Caveat', cursive";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(pct + '%', cx, cy);
+  }
+
+  // petite animation d'ouverture du donut
+  let current = 0;
+  const step = () => {
+    current += Math.max(1, (globalPct-current)/6);
+    if(current >= globalPct){ drawDonut(globalPct); return; }
+    drawDonut(Math.round(current));
+    requestAnimationFrame(step);
+  };
+  step();
+</script>
+</body>
+</html>
